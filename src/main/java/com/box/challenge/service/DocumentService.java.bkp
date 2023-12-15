@@ -1,0 +1,88 @@
+package com.box.challenge.service;
+
+import com.box.challenge.entity.Document;
+import com.box.challenge.model.response.DocumentResponse;
+import com.box.challenge.repository.DocumentRepository;
+import com.google.common.hash.Hashing;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class DocumentService {
+    @Autowired
+    private DocumentRepository documentRepository;
+
+    public List<DocumentResponse> saveDocuments(List<MultipartFile> files, String algorithm) throws IOException {
+        List<DocumentResponse> documentResponses = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String filename = file.getOriginalFilename();
+            Optional<Document> existingDocument = documentRepository.findByFilename(filename);
+
+            if (existingDocument.isEmpty()) {
+                Document document = new Document();
+                document.setFilename(filename);
+
+                String hash;
+                byte[] fileBytes = file.getBytes();
+                if ("SHA-256".equals(algorithm)) {
+                    hash = calculateSHA256(fileBytes);
+                    document.setHashSha256(hash);
+                    document.setHashSha512(null);
+                } else if ("SHA-512".equals(algorithm)) {
+                    hash = calculateSHA512(fileBytes);
+                    document.setHashSha256(null);
+                    document.setHashSha512(hash);
+                } else {
+                    throw new IllegalArgumentException("Invalid hash algorithm");
+                }
+
+                // Establece la fecha de la última carga solo si el archivo fue cargado previamente
+                if (existingDocument.isPresent()) {
+                    document.setLastUpload(LocalDateTime.now());
+                }
+
+                documentRepository.save(document);
+
+                DocumentResponse response = new DocumentResponse();
+                response.setFileName(filename);
+                response.setHash(hash);
+                response.setLastUpload(document.getLastUpload());
+
+                documentResponses.add(response);
+            }
+        }
+
+        return documentResponses;
+    }
+    private String calculateSHA256(byte[] content) {
+        return Hashing.sha256().hashBytes(content).toString();
+    }
+
+    private String calculateSHA512(byte[] content) {
+        return Hashing.sha256().hashBytes(content).toString();
+    }
+
+/*    private String hashFile(MultipartFile file, String algorithm) throws IOException, NoSuchAlgorithmException {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] bytes = file.getBytes();
+            byte[] hash = algorithm.equals()
+
+            StringBuilder hashString = new StringBuilder();
+            for (byte b : hash) {
+                hashString.append(String.format("%02x", b));
+            }
+
+            return hashString.toString();
+    }*/
+
+}
