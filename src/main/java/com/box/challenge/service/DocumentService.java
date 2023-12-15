@@ -4,6 +4,7 @@ import com.box.challenge.constants.HashAlgorithms;
 import com.box.challenge.entity.Document;
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.repository.DocumentRepository;
+import com.box.challenge.util.CalculateHashUtil;
 import com.google.common.hash.Hashing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,13 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
+    public List<DocumentResponse> getAllDocuments() {
+        List<Document> documents = documentRepository.findAll();
+        return documents.stream()
+                .map(this::mapToDocumentResponse)
+                .collect(Collectors.toList());
+    }
+
     private Optional<DocumentResponse> processFile(MultipartFile file, String algorithm) {
         String filename = file.getOriginalFilename();
         Optional<Document> existingDocument = documentRepository.findByFilename(filename);
@@ -36,16 +44,14 @@ public class DocumentService {
 
         try {
             byte[] fileBytes = file.getBytes();
-            String hash = calculateHash(fileBytes, algorithm);
+            String hash = CalculateHashUtil.calculateHash(fileBytes, algorithm);
 
             // Setea los campos de hash según el algoritmo
             switch (algorithm) {
                 case HashAlgorithms.SHA_256 -> {
                     document.setHashSha256(hash);
-                    document.setHashSha512(null);
                 }
                 case HashAlgorithms.SHA_512 -> {
-                    document.setHashSha256(null);
                     document.setHashSha512(hash);
                 }
                 default -> throw new IllegalArgumentException("Invalid hash algorithm");
@@ -70,11 +76,17 @@ public class DocumentService {
         }
     }
 
-    private String calculateHash(byte[] fileBytes, String algorithm) {
-        return switch (algorithm) {
-            case HashAlgorithms.SHA_256 -> Hashing.sha256().hashBytes(fileBytes).toString();
-            case HashAlgorithms.SHA_512 -> Hashing.sha512().hashBytes(fileBytes).toString();
-            default -> throw new IllegalArgumentException("Invalid hash algorithm");
-        };
+    private DocumentResponse mapToDocumentResponse(Document document) {
+        DocumentResponse response = new DocumentResponse();
+        response.setFileName(document.getFilename());
+        response.setHashSha256(document.getHashSha256());
+        response.setHashSha512(document.getHashSha512());
+
+        // Agrega lastUpload solo si no es nulo
+        if (document.getLastUpload() != null) {
+            response.setLastUpload(document.getLastUpload());
+        }
+
+        return response;
     }
 }

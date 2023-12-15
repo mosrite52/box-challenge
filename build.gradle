@@ -25,6 +25,7 @@ dependencies {
 	implementation 'com.google.guava:guava:30.1.1-jre'
 	implementation 'org.postgresql:postgresql:42.7.1'
 	implementation 'javax.servlet:javax.servlet-api:4.0.1'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.0'
 
 	compileOnly 'org.projectlombok:lombok:1.18.26'
 	annotationProcessor 'org.projectlombok:lombok:1.18.26'

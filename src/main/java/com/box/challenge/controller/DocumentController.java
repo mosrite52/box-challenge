@@ -2,14 +2,11 @@ package com.box.challenge.controller;
 
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.service.DocumentService;
+import com.box.challenge.util.BuildResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -30,7 +27,7 @@ public class DocumentController {
             @RequestPart("files") List<MultipartFile> files) {
         try {
             List<DocumentResponse> documentResponses = documentService.saveDocuments(files, algorithm);
-            return ResponseEntity.status(HttpStatus.CREATED).body(buildResponse(algorithm, documentResponses));
+            return ResponseEntity.status(HttpStatus.CREATED).body(BuildResponseUtil.filesResponse(algorithm, documentResponses));
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error uploading documents.");
@@ -39,10 +36,8 @@ public class DocumentController {
         }
     }
 
-    private Object buildResponse(String algorithm, List<DocumentResponse> documentResponses) {
-        return Map.of(
-                "algorithm", algorithm,
-                "documents", documentResponses
-        );
+    @GetMapping
+    public List<DocumentResponse> getAllDocuments() {
+        return documentService.getAllDocuments();
     }
 }
