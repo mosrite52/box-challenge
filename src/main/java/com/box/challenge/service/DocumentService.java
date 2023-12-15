@@ -3,6 +3,7 @@ package com.box.challenge.service;
 import com.box.challenge.constants.HashAlgorithms;
 import com.box.challenge.entity.Document;
 import com.box.challenge.model.response.DocumentResponse;
+import com.box.challenge.model.response.DocumentSearchResponse;
 import com.box.challenge.repository.DocumentRepository;
 import com.box.challenge.util.CalculateHashUtil;
 import com.google.common.hash.Hashing;
@@ -76,17 +77,37 @@ public class DocumentService {
         }
     }
 
+    public DocumentResponse findDocumentByHash(String hashType, String hash) {
+
+        // Lógica para buscar el documento por hash y tipo de hash
+        Optional<Document> document = documentRepository.findByHash(hashType, hash);
+
+        // Manejo de documento no encontrado
+        return document.map(doc -> mapToDocumentResponse(doc, hashType, hash)).orElse(null);
+    }
+
     private DocumentResponse mapToDocumentResponse(Document document) {
         DocumentResponse response = new DocumentResponse();
         response.setFileName(document.getFilename());
         response.setHashSha256(document.getHashSha256());
         response.setHashSha512(document.getHashSha512());
-
-        // Agrega lastUpload solo si no es nulo
-        if (document.getLastUpload() != null) {
-            response.setLastUpload(document.getLastUpload());
-        }
-
+        response.setLastUpload(document.getLastUpload());
         return response;
     }
+
+    private DocumentResponse mapToDocumentResponse(Document document, String hashType, String hash) {
+        DocumentResponse response = new DocumentResponse();
+        response.setFileName(document.getFilename());
+        switch (hashType) {
+            case HashAlgorithms.SHA_256 -> {
+                response.setHash(document.getHashSha256());
+            }
+            case HashAlgorithms.SHA_512 -> {
+                response.setHash(document.getHashSha512());
+            }
+        }
+        response.setLastUpload(document.getLastUpload());
+        return response;
+    }
+
 }

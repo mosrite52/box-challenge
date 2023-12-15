@@ -1,6 +1,7 @@
 package com.box.challenge.controller;
 
 import com.box.challenge.model.response.DocumentResponse;
+import com.box.challenge.model.response.DocumentSearchResponse;
 import com.box.challenge.service.DocumentService;
 import com.box.challenge.util.BuildResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +40,19 @@ public class DocumentController {
     @GetMapping
     public List<DocumentResponse> getAllDocuments() {
         return documentService.getAllDocuments();
+    }
+
+    @GetMapping(params = {"hashType", "hash"})
+    public ResponseEntity<DocumentResponse> findDocumentByHash(@RequestParam String hashType,
+                                                               @RequestParam String hash) {
+        DocumentSearchResponse searchRequest = new DocumentSearchResponse();
+
+        DocumentResponse documentResponse = documentService.findDocumentByHash(hashType, hash );
+
+        if (documentResponse != null) {
+            return new ResponseEntity<>(documentResponse, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 }
