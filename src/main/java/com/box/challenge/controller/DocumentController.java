@@ -26,8 +26,7 @@ public class DocumentController {
     public ResponseEntity<Object> uploadDocuments(
             @RequestParam("algorithm") String algorithm,
             @RequestPart("files") List<MultipartFile> files) {
-        try {
-            List<DocumentResponse> documentResponses = documentService.saveDocuments(files, algorithm);
+        try {List<DocumentResponse> documentResponses = documentService.saveDocuments(files, algorithm);
             return ResponseEntity.status(HttpStatus.CREATED).body(BuildResponseUtil.filesResponse(algorithm, documentResponses));
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,12 +1,10 @@
 package com.box.challenge.service;
 
-import com.box.challenge.constants.HashAlgorithms;
+import com.box.challenge.constants.HashAlgorithm;
 import com.box.challenge.entity.Document;
 import com.box.challenge.model.response.DocumentResponse;
-import com.box.challenge.model.response.DocumentSearchResponse;
 import com.box.challenge.repository.DocumentRepository;
 import com.box.challenge.util.CalculateHashUtil;
-import com.google.common.hash.Hashing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +14,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.box.challenge.constants.HashAlgorithm.SHA_256;
+import static com.box.challenge.constants.HashAlgorithm.SHA_512;
+
 @Service
 public class DocumentService {
 
@@ -46,13 +48,14 @@ public class DocumentService {
         try {
             byte[] fileBytes = file.getBytes();
             String hash = CalculateHashUtil.calculateHash(fileBytes, algorithm);
+            HashAlgorithm hashAlgorithm = HashAlgorithm.fromString(algorithm);
 
             // Setea los campos de hash según el algoritmo
-            switch (algorithm) {
-                case HashAlgorithms.SHA_256 -> {
+            switch (hashAlgorithm) {
+                case SHA_256 -> {
                     document.setHashSha256(hash);
                 }
-                case HashAlgorithms.SHA_512 -> {
+                case SHA_512 -> {
                     document.setHashSha512(hash);
                 }
                 default -> throw new IllegalArgumentException("Invalid hash algorithm");
@@ -98,11 +101,11 @@ public class DocumentService {
     private DocumentResponse mapToDocumentResponse(Document document, String hashType, String hash) {
         DocumentResponse response = new DocumentResponse();
         response.setFileName(document.getFilename());
-        switch (hashType) {
-            case HashAlgorithms.SHA_256 -> {
+        switch (HashAlgorithm.fromString(hashType)) {
+            case SHA_256 -> {
                 response.setHash(document.getHashSha256());
             }
-            case HashAlgorithms.SHA_512 -> {
+            case SHA_512 -> {
                 response.setHash(document.getHashSha512());
             }
         }
