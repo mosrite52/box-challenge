@@ -1,9 +1,6 @@
 package com.box.challenge.constants;
 
 import com.box.challenge.util.MessageSourceUtil;
-import lombok.Getter;
-
-import java.util.Locale;
 
 public enum HashAlgorithm {
 
@@ -22,7 +19,6 @@ public enum HashAlgorithm {
                 return hashAlgorithm;
             }
         }
-        String message = MessageSourceUtil.getMessage("error.invalid.hash", null, Locale.getDefault());
-        throw new IllegalArgumentException(message + value);
+        throw new IllegalArgumentException(MessageSourceUtil.getMessage("error.invalid.hash"));
     }
 }

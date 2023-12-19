@@ -5,8 +5,10 @@ import com.box.challenge.entity.Document;
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.repository.DocumentRepository;
 import com.box.challenge.util.CalculateHashUtil;
+import com.box.challenge.util.MessageSourceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -15,15 +17,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.box.challenge.constants.HashAlgorithm.SHA_256;
-import static com.box.challenge.constants.HashAlgorithm.SHA_512;
-
 @Service
 public class DocumentService {
 
+    private final DocumentRepository documentRepository;
+
     @Autowired
-    private DocumentRepository documentRepository;
+    public DocumentService(DocumentRepository documentRepository) {
+        this.documentRepository = documentRepository;
+    }
+
     public List<DocumentResponse> saveDocuments(List<MultipartFile> files, String algorithm) throws IOException {
+
+        validateFiles(files);
+
         return files.stream()
                 .map(file -> processFile(file, algorithm))
                 .filter(Optional::isPresent)
@@ -82,10 +89,7 @@ public class DocumentService {
 
     public DocumentResponse findDocumentByHash(String hashType, String hash) {
 
-        // Lógica para buscar el documento por hash y tipo de hash
         Optional<Document> document = documentRepository.findByHash(hashType, hash);
-
-        // Manejo de documento no encontrado
         return document.map(doc -> mapToDocumentResponse(doc, hashType, hash)).orElse(null);
     }
 
@@ -112,5 +116,15 @@ public class DocumentService {
         response.setLastUpload(document.getLastUpload());
         return response;
     }
+
+    private void validateFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException(MessageSourceUtil.getMessage("error.no.files"));
+        }
+        if (files.stream().anyMatch(file -> file.isEmpty() || !StringUtils.hasText(file.getOriginalFilename()))) {
+            throw new IllegalArgumentException(MessageSourceUtil.getMessage("error.no.files"));
+        }
+    }
+
 
 }

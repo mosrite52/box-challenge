@@ -16,6 +16,9 @@ public class MessageSourceUtil {
         MessageSourceUtil.messageSource = messageSource;
     }
 
+    public static String getMessage(String code) {
+        return getMessage(code, null, Locale.getDefault());
+    }
     public static String getMessage(String code, Object[] args, Locale locale) {
         return messageSource.getMessage(code, args, locale);
     }

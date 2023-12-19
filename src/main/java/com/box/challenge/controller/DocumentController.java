@@ -12,16 +12,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
 
+    private final DocumentService documentService;
+
     @Autowired
-    private DocumentService documentService;
+    public DocumentController(DocumentService documentService) {
+        this.documentService = documentService;
+    }
 
     @PostMapping("/hash")
     public ResponseEntity<Object> uploadDocuments(
@@ -29,10 +31,7 @@ public class DocumentController {
             @RequestPart("files") List<MultipartFile> files) {
         try {List<DocumentResponse> documentResponses = documentService.saveDocuments(files, algorithm);
             return ResponseEntity.status(HttpStatus.CREATED).body(BuildResponseUtil.filesResponse(algorithm, documentResponses));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body("Error uploading documents.");
-        } catch (IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new DocumentException(e.getMessage());
         }
     }
