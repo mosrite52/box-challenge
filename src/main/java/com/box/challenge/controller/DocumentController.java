@@ -1,5 +1,6 @@
 package com.box.challenge.controller;
 
+import com.box.challenge.exception.DocumentException;
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.model.response.DocumentSearchResponse;
 import com.box.challenge.service.DocumentService;
@@ -32,7 +33,7 @@ public class DocumentController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error uploading documents.");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            throw new DocumentException(e.getMessage());
         }
     }
 
