@@ -56,6 +56,7 @@ Una vez que el microservicio esté en funcionamiento, puede probar los siguiente
 
 1. **POST:** `localhost:8080/api/documents/hash`
    - Agregue en el cuerpo (`body`) la clave "algorithm" con el valor "SHA-256" o "SHA-512".
+   - Agregue en el cuerpo (`body`) la clave "files" y seleccionar el tipo de dato "file" para seleccionar uno o varios archivos.
 
 2. **GET:** `localhost:8080/api/documents`
    - Lista todos los documentos creados.
