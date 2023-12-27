@@ -2,10 +2,12 @@ package com.box.challenge.service;
 
 import com.box.challenge.constants.HashAlgorithm;
 import com.box.challenge.entity.Document;
+import com.box.challenge.exception.DocumentException;
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.repository.DocumentRepository;
 import com.box.challenge.util.CalculateHashUtil;
 import com.box.challenge.util.MessageSourceUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -16,9 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
-public class DocumentService {
+public class DocumentService implements IDocumentService {
 
     private final DocumentRepository documentRepository;
 
@@ -27,9 +29,12 @@ public class DocumentService {
         this.documentRepository = documentRepository;
     }
 
+    @Override
     public List<DocumentResponse> saveDocuments(List<MultipartFile> files, String algorithm) throws IOException {
 
         validateFiles(files);
+
+        log.info("Guardando {} documentos con alagoritmo {}", files.size(), algorithm);
 
         return files.stream()
                 .map(file -> processFile(file, algorithm))
@@ -38,8 +43,16 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public List<DocumentResponse> getAllDocuments() {
+        log.info("Obteniendo todos los registros en db");
+
         List<Document> documents = documentRepository.findAll();
+
+        if (documents.isEmpty()) {
+            throw new DocumentException(MessageSourceUtil.getMessage("no.files.in.db"));
+        }
+
         return documents.stream()
                 .map(this::mapToDocumentResponse)
                 .collect(Collectors.toList());
@@ -79,6 +92,8 @@ public class DocumentService {
             response.setHash(hash);
             response.setLastUpload(document.getLastUpload());
 
+            log.info("Archivo '{}' procesado con algoritmo '{}'", filename, algorithm);
+
             return Optional.of(response);
         } catch (IOException e) {
             //TODO Better exceptions
@@ -87,10 +102,18 @@ public class DocumentService {
         }
     }
 
+    @Override
     public DocumentResponse findDocumentByHash(String hashType, String hash) {
 
         Optional<Document> document = documentRepository.findByHash(hashType, hash);
-        return document.map(doc -> mapToDocumentResponse(doc, hashType, hash)).orElse(null);
+        if (document.isPresent()) {
+            log.info("Document found by {} hash: {}", hashType, hash);
+            return document.map(doc -> mapToDocumentResponse(doc, hashType, hash)).orElse(null);
+
+        } else {
+            log.warn("Archivo con tipo de hash {} y hash: {} no encontrado", hashType, hash);
+            throw new DocumentException(MessageSourceUtil.getMessage("file.not.found"));
+        }
     }
 
     private DocumentResponse mapToDocumentResponse(Document document) {
@@ -117,11 +140,9 @@ public class DocumentService {
         return response;
     }
 
-    private void validateFiles(List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) {
-            throw new IllegalArgumentException(MessageSourceUtil.getMessage("error.no.files"));
-        }
-        if (files.stream().anyMatch(file -> file.isEmpty() || !StringUtils.hasText(file.getOriginalFilename()))) {
+    public void validateFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty() || files.stream().anyMatch(file -> file.isEmpty()
+                || !StringUtils.hasText(file.getName()))) {
             throw new IllegalArgumentException(MessageSourceUtil.getMessage("error.no.files"));
         }
     }

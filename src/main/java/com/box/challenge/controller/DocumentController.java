@@ -4,7 +4,9 @@ import com.box.challenge.exception.DocumentException;
 import com.box.challenge.model.response.DocumentResponse;
 import com.box.challenge.model.response.DocumentSearchResponse;
 import com.box.challenge.service.DocumentService;
+import com.box.challenge.service.IDocumentService;
 import com.box.challenge.util.BuildResponseUtil;
+import com.box.challenge.util.MessageSourceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,7 @@ import java.util.List;
 @RequestMapping("/api/documents")
 public class DocumentController {
 
-    private final DocumentService documentService;
+    private final IDocumentService documentService;
 
     @Autowired
     public DocumentController(DocumentService documentService) {
@@ -38,7 +40,13 @@ public class DocumentController {
 
     @GetMapping
     public List<DocumentResponse> getAllDocuments() {
-        return documentService.getAllDocuments();
+
+        List<DocumentResponse> documents = documentService.getAllDocuments();
+        if (documents.isEmpty()) {
+            throw new DocumentException(MessageSourceUtil.getMessage("no.files.in.db"));
+        }
+
+        return documents;
     }
 
     @GetMapping(params = {"hashType", "hash"})
