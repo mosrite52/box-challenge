@@ -52,6 +52,13 @@ Una vez que la base de datos PostgreSQL esté en ejecución con la configuració
     ./gradlew bootRun
     ```
 
+### Docker
+Alternativamente a todo lo anterior, puede hacer uso de docker compose para tener un ambiente de prueba listo. Puede tardar un rato la primera vez que se ejecuta:
+
+```bash
+docker-compose up --build
+```
+
 Una vez que el microservicio esté en funcionamiento, puede probar los siguientes endpoints utilizando Postman o su herramienta favorita:
 
 1. **POST:** `localhost:8080/api/documents/hash`
