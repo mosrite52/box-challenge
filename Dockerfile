@@ -1,7 +1,6 @@
-FROM ubuntu:latest
-LABEL authors="Mauro Baioni"
-
 FROM gradle:8.5.0-jdk17 AS build
+
+LABEL authors="Mauro Baioni"
 
 COPY --chown=gradle:gradle . /home/gradle/src
 
